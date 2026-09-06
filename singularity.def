@@ -1,0 +1,41 @@
+Bootstrap: docker
+From: nvcr.io/nvidia/tensorflow:23.08-tf2-py3
+
+%labels
+    Maintainer Thiago Araujo tsaraujo@inf.ufrgs.br
+    Version 1.1
+    Description Contêiner otimizado para treinamento de modelos de Retinopatia (NVIDIA Grace ARM64)
+
+%post
+    # 1. Atualização e instalação de dependências do sistema operacional
+    apt-get update && apt-get install -y \
+        build-essential \
+        libgl1-mesa-glx \
+        libglib2.0-0 \
+        libsm6 \
+        libxext6 \
+        libxrender-dev \
+        git \
+        nano \
+        numactl \
+        wget && \
+        rm -rf /var/lib/apt/lists/*
+
+    # 2. Atualização do gerenciador de pacotes
+    pip3 install --upgrade pip
+    
+    # 3. Instalação de dependências Python
+    # NOTA: O TensorFlow NÃO deve ser instalado via pip aqui. 
+    # A imagem base do NGC já possui a versão 2.13.0 nativamente compilada e otimizada para GPU/ARM64.
+    pip3 install \
+        opencv-python==4.9.0.80 \
+        matplotlib==3.8.2 \
+        psutil==5.9.7 \
+        pandas==1.5.3 \
+        scikit-learn==1.3.2
+
+%environment
+    # Configuração de variáveis de ambiente para garantir a visibilidade da GPU
+    export PATH="/usr/local/nvidia/bin:${PATH}"
+    export LD_LIBRARY_PATH="/usr/local/cuda/lib64:/usr/local/nvidia/lib:/usr/local/nvidia/lib64:${LD_LIBRARY_PATH}"
+    export TF_FORCE_GPU_ALLOW_GROWTH="true"

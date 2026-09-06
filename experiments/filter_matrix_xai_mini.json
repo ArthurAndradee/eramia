@@ -1,0 +1,62 @@
+[
+  {
+    "name": "baseline",
+    "depth": 0,
+    "filters": [],
+    "rationale": "cobertura: controle negativo, percentil 95 de AUC (residuo +0.0008 na regressao AUC~Dice das 495 condicoes)."
+  },
+  {
+    "name": "BenGraham_MaxGreen2.0",
+    "depth": 2,
+    "filters": ["BenGraham", "MaxGreen2.0"],
+    "rationale": "cobertura: percentil ~75 de AUC, residuo -0.0005 (caso tipico, sobre a reta)."
+  },
+  {
+    "name": "BenGraham_GreenChannel_CLAHE4.0_Otsu",
+    "depth": 4,
+    "filters": ["BenGraham", "GreenChannel", "CLAHE4.0", "Otsu"],
+    "rationale": "cobertura: percentil ~50 de AUC, residuo +0.0000 (caso tipico, sobre a reta)."
+  },
+  {
+    "name": "Gamma0.8_MaxGreen2.0_Otsu",
+    "depth": 3,
+    "filters": ["Gamma0.8", "MaxGreen2.0", "Otsu"],
+    "rationale": "cobertura: percentil ~25 de AUC, residuo -0.0002 (caso tipico, sobre a reta)."
+  },
+  {
+    "name": "BenGraham_MaxGreen2.0_Canny",
+    "depth": 3,
+    "filters": ["BenGraham", "MaxGreen2.0", "Canny"],
+    "rationale": "cobertura: percentil ~5 de AUC (ainda longe do regime degenerado), residuo -0.0005."
+  },
+  {
+    "name": "Retinex_Gaussian",
+    "depth": 2,
+    "filters": ["Retinex", "Gaussian"],
+    "rationale": "sonda +: maior residuo positivo sob Grad-CAM entre AUC>0.70 (+0.0222) -- Dice bem acima do previsto pela reta AUC~Dice."
+  },
+  {
+    "name": "Retinex_MaxGreen2.0_Gaussian",
+    "depth": 3,
+    "filters": ["Retinex", "MaxGreen2.0", "Gaussian"],
+    "rationale": "sonda +: 2o maior residuo positivo sob Grad-CAM entre AUC>0.70 (+0.0240)."
+  },
+  {
+    "name": "Retinex_MaxGreen2.0_CLAHE4.0_Otsu",
+    "depth": 4,
+    "filters": ["Retinex", "MaxGreen2.0", "CLAHE4.0", "Otsu"],
+    "rationale": "sonda -: maior residuo negativo sob Grad-CAM entre AUC>0.70 (-0.0168) -- familia Otsu, Dice abaixo do previsto."
+  },
+  {
+    "name": "Retinex_Grayscale_CLAHE4.0_Otsu",
+    "depth": 4,
+    "filters": ["Retinex", "Grayscale", "CLAHE4.0", "Otsu"],
+    "rationale": "sonda -: 2o maior residuo negativo sob Grad-CAM entre AUC>0.70 (-0.0183) -- tambem familia Otsu; e a condicao MENOS ESTAVEL entre sementes (CV Dice=0.245)."
+  },
+  {
+    "name": "LABNorm_MaxGreen2.0_Frangi",
+    "depth": 3,
+    "filters": ["LABNorm", "MaxGreen2.0", "Frangi"],
+    "rationale": "extremo: menor AUC absoluto entre as 495 condicoes (0.552, quase aleatorio) -- teste de robustez em regime degenerado."
+  }
+]
