@@ -27,7 +27,7 @@ SIF_PATH="$SUBMIT_DIR/singularity.sif"
 SINGULARITY_ARGS=(exec --nv --bind "$SUBMIT_DIR:$SUBMIT_DIR" --bind "$HOME:$HOME" "$SIF_PATH")
 
 ALERT_LOG="$SUBMIT_DIR/logs/ALERTAS_PENDENTES.txt"
-NOTIFY_EMAIL="botooooxgamer123@gmail.com"
+NOTIFY_EMAIL="${NOTIFY_EMAIL:-}"  # vazio = sem e-mail
 
 echo "=========================================="
 echo "HCPA — Figura qualitativa (amostra + anotacao + XAI)"
@@ -42,7 +42,7 @@ then
 else
     MSG="[$(date '+%Y-%m-%d %H:%M:%S')] hcpa_qualitative_figure (job ${SLURM_JOB_ID:-manual}) falhou -- ver logs/hcpa_qualitative_figure_${SLURM_JOB_ID:-manual}.log/.err"
     echo -e "$MSG\n$(printf '%.0s-' {1..60})" >> "$ALERT_LOG"
-    echo "$MSG" | mailx -s "[HCPA] figura qualitativa falhou" "$NOTIFY_EMAIL" 2>/dev/null || true
+    [ -n "$NOTIFY_EMAIL" ] && echo "$MSG" | mailx -s "[HCPA] figura qualitativa falhou" "$NOTIFY_EMAIL" 2>/dev/null || true
     echo "✗ Figura qualitativa falhou"
     exit 1
 fi

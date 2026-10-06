@@ -1,4 +1,4 @@
-# Guia Operacional — Execução dos Experimentos (~180 execuções)
+# Guia Operacional — Execução dos Experimentos (576 condições × 10 = 5.760 execuções)
 
 > Documento definitivo para operar o pipeline em produção no cluster.
 > Atualizado em 2026-07-08: ponto de entrada único (`run_all_experiments.sh`)
@@ -127,8 +127,8 @@ Isso é **tudo**. Um único job (`hcpa_orchestrator`) é submetido à partição
 `shared` (leve, sem GPU — ele só despacha e monitora, nunca ocupa
 `grace1`/`grace2` ele mesmo) e roda como um daemon de longa duração que:
 
-1. Lê `experiments/filter_matrix_template.json` (18 filtros × 10 repetições
-   = 180 execuções de treino+avaliação, mais criação de dataset/TFRecord/
+1. Lê `experiments/filter_matrix_template.json` (576 condições × 10 repetições
+   = 5.760 execuções de treino+avaliação, mais criação de dataset/TFRecord/
    limpeza por filtro).
 2. Para cada filtro ainda não concluído, submete Script 1 **sem**
    `--nodelist` — o SLURM escolhe `grace1` ou `grace2` conforme

@@ -1,0 +1,139 @@
+{
+ "condicoes_matriz": 576,
+ "condicoes_completas": 576,
+ "execucoes_reps0_9": 5760,
+ "baseline": {
+  "auc": 0.9122491076808974,
+  "auc_sd": 0.009195794263821108,
+  "sens": 0.8169934640522876,
+  "spec": 0.8542553191489362,
+  "dice": 0.06451865576614356,
+  "rank": 3
+ },
+ "melhor": {
+  "nome": "LABNorm",
+  "auc": 0.9169100264219162,
+  "p_welch": 0.23398077348985555,
+  "p_pareado": 0.0638121411797316
+ },
+ "acima_baseline": 2,
+ "abaixo_baseline_sig_holm": 466,
+ "acima_baseline_sig_holm": 0,
+ "acima_baseline_sig_fdr": 0,
+ "acima_baseline_p05_sem_correcao": 0,
+ "spearman_profundidade_auc": {
+  "rho": -0.21890172420620568,
+  "p": 1.1161416531888485e-07
+ },
+ "kruskal_profundidade": {
+  "H": 31.83800766984256,
+  "p": 5.661439790997083e-07
+ },
+ "modelo_aditivo_r2": 0.8755340181119508,
+ "pearson_auc_dice": {
+  "r": 0.8594229175795832,
+  "p": 2.2429930770367228e-169
+ },
+ "pearson_auc_pointing": {
+  "r": 0.8252248934061485,
+  "p": 1.566067157345157e-144
+ },
+ "faixas": {
+  "auc": [
+   0.5518240393083949,
+   0.9169100264219162
+  ],
+  "sens": [
+   0.41873638344226577,
+   0.9529411764705882
+  ],
+  "spec": [
+   0.2797872340425531,
+   0.9276595744680851
+  ],
+  "dice": [
+   0.01641462874382011,
+   0.08186332315797011
+  ]
+ },
+ "grupos_quase_identicos": [
+  [
+   "Grayscale_Frangi",
+   "Frangi"
+  ],
+  [
+   "Gamma0.8_Grayscale_Frangi",
+   "Gamma0.8_Frangi"
+  ],
+  [
+   "BenGraham_Grayscale_Canny",
+   "BenGraham_Canny"
+  ],
+  [
+   "HistogramEq_Grayscale_Frangi",
+   "HistogramEq_Frangi"
+  ],
+  [
+   "Grayscale_Canny",
+   "Canny"
+  ],
+  [
+   "LABNorm_Canny",
+   "LABNorm_Grayscale_Canny"
+  ],
+  [
+   "HistogramEq_Canny",
+   "HistogramEq_Grayscale_Canny"
+  ],
+  [
+   "Gamma0.8_Grayscale_Canny",
+   "Gamma0.8_Canny"
+  ],
+  [
+   "Retinex_Frangi",
+   "Retinex_Grayscale_Frangi"
+  ],
+  [
+   "LABNorm_Otsu",
+   "LABNorm_Grayscale_Otsu"
+  ],
+  [
+   "Retinex_Grayscale_Otsu",
+   "Retinex_Otsu"
+  ],
+  [
+   "Gamma0.8_Otsu",
+   "Gamma0.8_Grayscale_Otsu"
+  ],
+  [
+   "HistogramEq_Otsu",
+   "HistogramEq_Grayscale_Otsu"
+  ]
+ ]
+}
+incompletas: 0
+            camada        opcao  n_pares  delta_auc_medio  delta_auc_mediana  frac_pares_melhora  p_wilcoxon  p_wilcoxon_holm
+     C1_iluminacao    BenGraham       96          -0.0142            -0.0159              0.2708      0.0000           0.0001
+     C1_iluminacao     Gamma0.8       96           0.0054             0.0016              0.6979      0.0000           0.0004
+     C1_iluminacao      Retinex       96           0.0085            -0.0031              0.4375      0.8208           1.0000
+     C1_iluminacao  HistogramEq       96           0.0051            -0.0006              0.4896      0.5761           1.0000
+     C1_iluminacao      LABNorm       96           0.0017             0.0012              0.6250      0.0142           0.0994
+      C2_espectral GreenChannel      144           0.0016            -0.0017              0.4792      0.5677           1.0000
+      C2_espectral  MaxGreen2.0      144          -0.0132            -0.0114              0.1736      0.0000           0.0000
+      C2_espectral    Grayscale      144          -0.0038            -0.0018              0.4306      0.0064           0.0508
+C3_contraste_local      AHE40.0      192           0.0012            -0.0049              0.4167      0.1071           0.5353
+C3_contraste_local     CLAHE4.0      192           0.0006            -0.0033              0.4167      0.0546           0.3275
+    C4_refinamento   Unsharp1.5       72          -0.0215            -0.0212              0.0000      0.0000           0.0000
+    C4_refinamento       Median       72          -0.0001            -0.0012              0.4444      0.5223           1.0000
+    C4_refinamento     Gaussian       72           0.0056             0.0045              0.6389      0.0021           0.0191
+    C4_refinamento       Morpho       72          -0.0046            -0.0054              0.2778      0.0001           0.0007
+    C4_refinamento       Frangi       72          -0.1654            -0.1541              0.0000      0.0000           0.0000
+    C4_refinamento        Canny       72          -0.1211            -0.1145              0.0000      0.0000           0.0000
+    C4_refinamento         Otsu       72          -0.0359            -0.0308              0.1250      0.0000           0.0000
+       count    mean  median     min     max
+depth                                       
+0          1  0.9122  0.9122  0.9122  0.9122
+1         17  0.8721  0.8987  0.6442  0.9169
+2        101  0.8528  0.8845  0.5673  0.9106
+3        247  0.8438  0.8710  0.5518  0.9095
+4        210  0.8375  0.8676  0.6626  0.9002

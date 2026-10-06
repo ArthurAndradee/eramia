@@ -33,7 +33,7 @@ echo "Node: $(hostname)"
 echo "=========================================="
 
 ALERT_LOG="$SUBMIT_DIR/logs/ALERTAS_PENDENTES.txt"
-NOTIFY_EMAIL="botooooxgamer123@gmail.com"
+NOTIFY_EMAIL="${NOTIFY_EMAIL:-}"  # vazio = sem e-mail
 
 if singularity "${SINGULARITY_ARGS[@]}" python3 "$SUBMIT_DIR/pipeline/run_sanity_check.py" \
     --base-ssd "$SSD_BASE" --base-home "$HOME_BASE" --n-images 15 --n-steps 6
@@ -46,7 +46,7 @@ else
     # instead of importing the Python helper.
     MSG="[$(date '+%Y-%m-%d %H:%M:%S')] hcpa_sanity_check (job ${SLURM_JOB_ID:-manual}) falhou -- ver logs/hcpa_sanity_check_${SLURM_JOB_ID:-manual}.log/.err"
     echo -e "$MSG\n$(printf '%.0s-' {1..60})" >> "$ALERT_LOG"
-    echo "$MSG" | mailx -s "[HCPA] sanity check falhou" "$NOTIFY_EMAIL" 2>/dev/null || true
+    [ -n "$NOTIFY_EMAIL" ] && echo "$MSG" | mailx -s "[HCPA] sanity check falhou" "$NOTIFY_EMAIL" 2>/dev/null || true
     echo "✗ Sanity check falhou"
     exit 1
 fi

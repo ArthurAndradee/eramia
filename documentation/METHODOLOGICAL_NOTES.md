@@ -37,6 +37,13 @@ usuário definiu explicitamente como 70/30 train/test (sem terceira fatia):
 **Classificação:** requer decisão do pesquisador — **não foi alterado nesta
 rodada** (mexeria no requisito de split 70/30 definido no início do projeto).
 
+**Decisão (2026-10-01):** opção (a). O estudo mantém apenas treino e teste
+(70/30), sem conjunto de validação separado, inclusive na conclusão das
+condições pendentes (item 13), para que todas as 576 condições sejam
+comparáveis entre si. O uso do teste como `validation_data` (early stopping
+e ReduceLROnPlateau, `dr_hcpa_v2_2024.py`) deve ser declarado como
+limitação na seção de métodos de qualquer artigo derivado.
+
 ---
 
 ## 2. Threshold fixo (0.5) para binarizar o heatmap do Grad-CAM em Dice/IoU — documentado, seguro
@@ -519,3 +526,73 @@ são tratados corretamente pelo design existente (ver docstring do módulo e
 
 **Classificação:** revisão confirma design já robusto; nenhuma correção
 adicional necessária além dos itens 12.1-12.4.
+
+---
+
+## 13. Conclusão das condições pendentes da varredura de 576 (2026-10-01)
+
+**Estado de partida:** 495 das 576 condições com 10/10 repetições; 80 com
+2 a 9 repetições e 1 (`Retinex_MaxGreen2.0_Otsu`) com nenhuma — 194
+repetições faltando no total.
+
+**Causa das lacunas:** quase todas são repetições cujo treino caiu 3 vezes
+seguidas e foram marcadas como desistidas em `failed_jobs.json`. Os crashes
+são de baixo nível e intermitentes, não determinísticos: códigos de saída
+-6/SIGABRT (990 ocorrências), -7/SIGBUS (415) e -11/SIGSEGV (212), em geral
+nos primeiros segundos do processo, em ambos os nós; 22% de todas as
+tentativas de treino da campanha original falharam assim, e a maioria
+passou na tentativa seguinte. A exceção é `Retinex_MaxGreen2.0_Otsu`, cujo
+Script 1 estourou o limite de 2h (Retinex em 1280×1280 é lento) com o
+conjunto de teste pela metade (176/553).
+
+**O que foi feito:**
+- `failed_jobs.json` copiado para `failed_jobs.backup_20261001.json`;
+  removidas dele as entradas `repetitions`/`filters` das 81 condições
+  pendentes (entradas de `cleanup` e de outras condições mantidas).
+- Nova opção `--attempts-since` em `script5_orquestrador.py`: o limite de
+  `MAX_TRAIN_ATTEMPTS` (3) passa a contar só lançamentos registrados no
+  `master.log` a partir dessa data, dando um novo orçamento de 3 tentativas
+  sem reescrever o histórico.
+- `experiments/filter_matrix_pending.json`: só as 81 condições pendentes.
+- `run_complete_pending.sh`: mesmo dispatcher e mesmos padrões da campanha
+  principal (reps 0-9, só Grad-CAM, sem subamostragem, checkpoint apagado
+  após a avaliação), com a matriz pendente e `--attempts-since`.
+- `Retinex_MaxGreen2.0_Otsu`: Script 1 ressubmetido à mão com `--force`
+  (dataset parcial) e limite de 4h, pelo próprio gerador de scripts do
+  orquestrador, para que os eventos STARTED/SUCCESS sejam registrados no
+  `master.log` normalmente.
+
+**Comparabilidade com as 495 condições já completas:** as repetições novas
+reutilizam as mesmas imagens filtradas e TFRecords já gerados (exceto a
+condição acima), a mesma configuração de treino e as mesmas seeds. As
+alterações não commitadas em `pipeline/` presentes desde a campanha
+original (vetorização do Frangi, suporte a reps 10-19, LIME/Occlusion
+opcionais) não mudam o comportamento padrão. Diferença cosmética: os CSVs
+novos de `script3_avalia.py` trazem a coluna extra `xai_method`
+(= `gradcam`), tratada na análise.
+
+**Desfecho (2026-10-02 22:22):** as 194 repetições pendentes foram
+concluídas; 576/576 condições com 10/10 repetições (5.760 execuções), sem
+nenhuma desistência. Das 225 tentativas de treino desta retomada, 31 (14%)
+caíram pelo mesmo crash intermitente e passaram ao serem repetidas.
+Análise final e relatório: `experiments/analise_final_576/RELATORIO.md`.
+
+**Correções operacionais feitas durante a retomada:**
+- **Nós presos a um nó ocupado por outro usuário.** O grace1 ficou parado
+  por horas enquanto os 2 slots da campanha esperavam o grace2, ocupado por
+  outro usuário. Como `SSD_BASE` resolve para o `/home` compartilhado (os
+  dados são visíveis dos dois nós), as 53 condições da matriz pendente
+  atribuídas ao grace2 em `experiments/node_assignments/` foram reatribuídas
+  ao grace1 (2026-10-02 14:15). Nenhum dado foi movido.
+- **Novas tentativas mandadas para um nó ocupado.** `script5_orquestrador.py`
+  sempre enviava a nova tentativa de um treino para o outro nó
+  (`other_grace_node`), mesmo quando ele estava ocupado por outro usuário,
+  deixando a repetição presa por horas. Agora a nova tentativa só vai para
+  o outro nó se ele não estiver rodando job de outro usuário
+  (`nodes_held_by_other_users`); se estiver, fica no nó original.
+- **Análise automática.** `run_final_analysis.sh` (partição `shared`)
+  esperou a conclusão, rodou `experiments/analise_final_576/analise.py` e
+  avisou por e-mail e em `logs/ALERTAS_PENDENTES.txt`.
+- `run_complete_pending.sh` e `run_final_analysis.sh` excluem o nó `bali2`
+  da partição `shared`, onde o primeiro lançamento do orquestrador falhou
+  (`launch_failed_requeued_held`).

@@ -88,6 +88,10 @@ NUM_REPETITIONS = 10
 # needed, so a single flag threads through the whole dispatcher without
 # touching every call site individually.
 REP_OFFSET = 0
+# If set ("YYYY-MM-DD HH:MM:SS"), MAX_TRAIN_ATTEMPTS only counts train
+# launches logged at/after this instant -- gives reps that exhausted their
+# budget in an earlier run a fresh one, without rewriting master.log.
+ATTEMPTS_SINCE: Optional[str] = None
 # Script 1 (dataset creation) is deliberately submitted WITHOUT --nodelist so
 # SLURM can pick whichever of grace1/grace2 is free — but that means, in the
 # worst case, several filters could each get pinned to the same node before
@@ -163,7 +167,7 @@ PROGRESS_REPORT_PATH = Path(REPO_ROOT_DIR) / "logs" / "progress_report.txt"
 FINAL_REPORT_PATH = Path(REPO_ROOT_DIR) / "logs" / "final_report.txt"
 FAILED_JOBS_PATH = Path(REPO_ROOT_DIR) / "failed_jobs.json"
 ALERT_LOG_PATH = Path(REPO_ROOT_DIR) / "logs" / "ALERTAS_PENDENTES.txt"
-NOTIFY_EMAIL = "botooooxgamer123@gmail.com"
+NOTIFY_EMAIL = os.environ.get("NOTIFY_EMAIL", "")  # vazio = sem e-mail, só ALERT_LOG_PATH
 NODE_DOWN_SINCE_PATH = Path(REPO_ROOT_DIR) / "experiments" / "node_down_since.json"
 
 logger = logging.getLogger(__name__)
@@ -605,6 +609,19 @@ def squeue_busy_nodes(partition: str) -> Set[str]:
         return set()
 
 
+def nodes_held_by_other_users(partition: str) -> Set[str]:
+    """Nodes in `partition` currently RUNNING a job owned by someone else."""
+    me = os.environ.get("USER", "")
+    try:
+        result = subprocess.run(["squeue", "-p", partition, "-h", "-t", "RUNNING", "-o", "%u %N"],
+                                 capture_output=True, text=True, timeout=15)
+        return {parts[1] for parts in (l.split() for l in result.stdout.splitlines())
+                if len(parts) == 2 and parts[0] != me}
+    except Exception as e:
+        logger.warning(f"squeue query failed: {e}")
+        return set()
+
+
 def sinfo_node_states(partition: str) -> Dict[str, str]:
     try:
         result = subprocess.run(["sinfo", "-p", partition, "-h", "-N", "-o", "%N %t"],
@@ -678,7 +695,8 @@ def count_stage_attempts(events: List[dict], filter_name: str, stage: str, rep: 
     rep_str = str(rep) if rep is not None else "NA"
     return sum(1 for e in events
                if e["filter"] == filter_name and e["stage"] == stage
-               and e["rep"] == rep_str and e["status"] == "STARTED")
+               and e["rep"] == rep_str and e["status"] == "STARTED"
+               and (ATTEMPTS_SINCE is None or e["ts"] >= ATTEMPTS_SINCE))
 
 
 def _train_failure_reason(train_status: Optional[str], eval_status: Optional[str]) -> str:
@@ -856,6 +874,8 @@ def notify_operator(subject: str, body: str):
             f.write(entry)
     except Exception as e:
         logger.error(f"Could not write to ALERT_LOG_PATH ({e}) — alert only in daemon log: {subject}")
+    if not NOTIFY_EMAIL:
+        return
     try:
         subprocess.run(
             ["mailx", "-s", f"[HCPA] {subject}", NOTIFY_EMAIL],
@@ -1090,6 +1110,11 @@ def process_filter(filter_name: str, submitter: SLURMJobSubmitter, base_ssd: str
             # using `node` (the original pin) everywhere else in this
             # function, unchanged.
             submit_node = other_grace_node(node) or node
+            # ...but not onto a node another cluster user is holding: the
+            # retry would just sit PENDING there for hours while its own
+            # pinned node may be free.
+            if submit_node != node and submit_node in nodes_held_by_other_users(submitter.partition):
+                submit_node = node
         if budget[0] <= 0:
             # Queue at capacity — stop submitting entirely (not just this
             # rep) rather than looping through the remaining missing reps;
@@ -1704,15 +1729,20 @@ def main():
                              "run (default is the main campaign's; the XAI mini-campaign passes "
                              "its own wrapper here so a resubmit doesn't accidentally restart "
                              "the main campaign's dispatcher instead).")
+    parser.add_argument("--attempts-since", type=str, default=None,
+                        help="Only count train attempts logged at/after this timestamp "
+                             "('YYYY-MM-DD HH:MM:SS') toward MAX_TRAIN_ATTEMPTS -- grants reps "
+                             "that gave up in an earlier run a fresh retry budget.")
     args = parser.parse_args()
 
     paths = get_paths(args.base_ssd, args.base_home)
     base_ssd = str(paths["base_ssd"])
     base_home = str(paths["base_home"])
 
-    global logger, REP_OFFSET
+    global logger, REP_OFFSET, ATTEMPTS_SINCE
     logger = setup_logging("script5_orquestrador_daemon")
     REP_OFFSET = args.rep_offset
+    ATTEMPTS_SINCE = args.attempts_since
 
     matrix_file = Path(args.matrix_file) if args.matrix_file else paths["filter_matrix_file"]
     filter_matrix = FilterMatrix(matrix_file, logger)

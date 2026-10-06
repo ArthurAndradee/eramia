@@ -197,11 +197,11 @@ def render_figure(img, mask, gradcam_map, lime_map, occlusion_map, img_name, pre
     # "(mapa de calor)" em cada uma das 3 caixas de XAI (isso e dito uma
     # unica vez, em um rotulo de grupo acima delas, mais abaixo).
     panels = [
-        ("Imagem original (FGADR)", "photo", img_u8, None, None, None),
-        ("Anotação clínica", "mask", mask_raw, None, None, None),
-        ("Grad-CAM", "photo", img_u8, gradcam_map, "jet", 0.75),
-        ("LIME", "photo", img_u8, lime_map, "jet", 0.75),
-        ("Occlusion Sensitivity", "photo", img_u8, occlusion_map, "jet", 0.75),
+        ("(A) Imagem original", "photo", img_u8, None, None, None),
+        ("(B) Anotação clínica", "mask", mask_raw, None, None, None),
+        ("(C) Grad-CAM", "photo", img_u8, gradcam_map, "jet", 0.75),
+        ("(D) LIME", "photo", img_u8, lime_map, "jet", 0.75),
+        ("(E) Occlusion Sensitivity", "photo", img_u8, occlusion_map, "jet", 0.75),
     ]
 
     # BOX_Y0=1.0 -- a base da caixa fica colada exatamente na borda de

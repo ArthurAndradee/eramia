@@ -8,7 +8,7 @@
 > `/ssd/aadsilva/ic/hcpa` hardcoded, sem geração real de TFRecords, sem
 > Grad-CAM). Para as limitações metodológicas conhecidas, ver
 > `METHODOLOGICAL_NOTES.md`. Para o guia passo a passo de como executar os
-> ~180 experimentos em produção (preparação do SSD, comandos reais,
+> 5.760 execuções em produção (preparação do SSD, comandos reais,
 > monitoramento, recuperação de falhas), ver `RUN_EXPERIMENTS.md`.
 
 ## Estrutura do repositório
@@ -153,10 +153,24 @@ Ver `documentation/RUN_EXPERIMENTS.md` seção 4.4.
 
 ## Matriz de filtros
 
-`experiments/filter_matrix_template.json` — desenho experimental
-definitivo, 18 condições (baseline + 12 isoladas + 4 pares + 1 composto
-triplo), cada uma com `rationale` (justificativa) e `hypothesis` (hipótese
-testada). Documentação completa:
+`experiments/filter_matrix_template.json` — gerada por
+`experiments/generate_filter_matrix.py`: espaço combinatório completo de
+4 camadas funcionais, no máximo 1 filtro por camada, ordem fixa
+C1 → C2 → C3 → C4:
+
+| Camada | Opções (além de "nenhum") |
+|---|---|
+| C1 – iluminação | BenGraham, Gamma0.8, Retinex, HistogramEq, LABNorm |
+| C2 – espectral | GreenChannel, MaxGreen2.0, Grayscale |
+| C3 – contraste local | AHE40.0, CLAHE4.0 |
+| C4 – refinamento | Unsharp1.5, Median, Gaussian, Morpho, Frangi, Canny, Otsu |
+
+6 × 4 × 3 × 8 = **576 condições** (1 baseline + 17 de 1 filtro + 101 de 2 +
+247 de 3 + 210 de 4), cada uma com `rationale`. Resultados e análise final:
+`experiments/analise_final_576/`.
+
+Documentação do desenho anterior (18 condições, substituído pela matriz
+de 576 — mantido como histórico):
 - `experiments/FILTER_AUDIT.md` — auditoria de todos os filtros
   implementados (parâmetros, custo, impacto esperado, artefatos,
   compatibilidade, evidência de literatura, inclusão/exclusão).
@@ -165,7 +179,7 @@ testada). Documentação completa:
   autocrítica da matriz, e relatório final (cobertura, limitações,
   extensões futuras, custo computacional estimado).
 
-18 filtros × 10 repetições = 180 execuções de treino+avaliação.
+576 condições × 10 repetições = 5.760 execuções de treino+avaliação.
 
 ## Execução local (sem SLURM)
 
